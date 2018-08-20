@@ -14,8 +14,7 @@ const config = require('./settings.json')
 const { DB } = require('./utilities')
 const { Finding } = require('./scc')
 const db = new DB()
-
-var parse = require('parse-header-stream')
+// var parse = require('parse-header-stream')
 
 async function poll () {
   try {
