@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 const { SCC } = require('./appengine/scc')
 const { DB, callCloudflare } = require('./appengine/utilities')
-const db = new DB()
+// const db = new DB()
 const scc = new SCC()
 const express = require('express')
 const app = express()
