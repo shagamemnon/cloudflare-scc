@@ -127,7 +127,7 @@ module.exports.callCloudflare = ({query, zone}) => {
   })
 }
 
-module.exports.DB = DB
+module.exports.DB = new DB()
 module.exports.streams = {
   WritableStream: WritableStream,
   ReadableStream: ReadableStream

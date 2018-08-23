@@ -12,23 +12,11 @@ const hash = require('hash.js')
 const ncp = require('copy-paste')
 const minify = require('gulp-minify')
 const concat = require('concat')
-const argv = require('yargs').argv
-const exec = require('child_process').exec
 
 const { SCC } = require('./appengine/scc')
 let config = fs.readJsonSync('./setup.json')
-let basename = 'cloudflare-scc-0.1'
-let child
-
-child = exec('basename `git rev-parse --show-toplevel`',
-  function (error, stdout, stderr) {
-    basename = stdout
-    process.env.BASENAME = stdout
-    if (error !== null) {
-      console.log('exec error: ' + error)
-    }
-    return basename
-  })
+let basename = __dirname.split('/').slice(-1).pop()
+console.log(basename)
 
 const client = auth.getClient({
   scopes: 'https://www.googleapis.com/auth/cloud-platform'
@@ -110,6 +98,11 @@ const configure = (projectId) => {
     message: 'Choose a top-level domain to use for communication between SCC and Cloudflare. Note that all domains in your Cloudflare org will be available for polling threat data, regardless of the domain you choose.',
     default: 'example.com',
     validate (input) {
+      if (input === '' || !input.includes('.')) {
+        console.log('\nPlease add a properly formatted top-level domain from Cloudflare ( example.com )')
+        return false
+      }
+
       terminal.current = `${input} will be your Security Command Center proxy host.`
       return true
     },
@@ -133,6 +126,10 @@ const configure = (projectId) => {
     message: `List all of the top-level domains you'd like to monitor on Security Command Center. Separate with commas ( example.com, website.com ):`,
 
     validate (input) {
+      if (input === '' || !input.includes('.')) {
+        console.log('\nYou must enter at least 1 properly formatted top-level domain ( example.com )')
+        return false
+      }
       terminal.current = `Added sites to config`
       return true
     },
@@ -156,7 +153,7 @@ const configure = (projectId) => {
     prefix: '>',
     message: `Enter your 12 digit Google Organization ID:`,
     validate (input) {
-      terminal.current = `Writing config file ... `
+      terminal.current = `Config file complete.`
       return true
     },
     filter (input) {
@@ -194,7 +191,12 @@ const configure = (projectId) => {
     },
     filter (input) {
       return new Promise((resolve, reject) => {
+        console.log(`cloudshell download ~/${basename}/workers/worker.compiled.js`)
+        var cmd = new run.Command(`cloudshell download ~/${basename}/workers/worker.compiled.js`)
+        console.log('Downloading ')
+        cmd.exec()
         terminal.current = '\nOpen Cloudflare dashboard: \nhttps://dash.cloudflare.com/?zone=workers'
+        setTimeout(() => { console.log(`Once you've added the Worker to Cloudflare, run this to deploy App Engine:\n${chalk.keyword('orange')('npm run deploy')}`) }, 10000)
         resolve(input)
       })
     }
@@ -296,8 +298,8 @@ gulp.task('enableapis', function (cb) {
 })
 
 gulp.task('downloadFile', function (cb) {
-  console.log(`cloudshell download ${basename}/workers/worker.compiled.js`)
-  var cmd = new run.Command(`cloudshell download ${basename}/workers/worker.compiled.js`)
+  console.log(`cloudshell download ~/${basename}/workers/worker.compiled.js`)
+  var cmd = new run.Command(`cloudshell download ~/${basename}/workers/worker.compiled.js`)
   console.log('Downloading ')
   cmd.exec()
   cb()
@@ -305,15 +307,7 @@ gulp.task('downloadFile', function (cb) {
 
 gulp.task('moveFile', function (cb) {
   console.log(basename)
-  var cmd = new run.Command(`cd ~ && mv scc_key.json ~/${basename}`)
-  cmd.exec()
-  cb()
-})
-
-gulp.task('deploy', function (cb) {
-  var cmd = new run.Command('cd appengine')
-  console.log('Once the Worker is live on Cloudflare, you can initialize the SCC integration by running:')
-  console.log(chalk.keyword('blue')('cd appengine && gcloud app deploy'))
+  var cmd = new run.Command(`mv ~/scc*.json ~/${basename}/appengine/scc_key.json && cd ~/${basename}/appengine`)
   cmd.exec()
   cb()
 })
