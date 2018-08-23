@@ -1,0 +1,22 @@
+{
+  "WORKERS": {
+    "headers": {
+      "X-Auth-Key": "",
+      "X-Auth-Email": "",
+      "Content-Type": "application/json"
+    },
+    "ORG_NAME": "",
+    "HMAC_SECRET_KEY": "",
+    "STRING_TO_SIGN": "",
+    "UNIQUE_LOGS_ENDPOINT": "",
+    "SETUP_ENDPOINT": "https: //cloudflare.com/scc-setup",
+    "WORKERS_MULTISCRIPT": false,
+    "SETUP": true
+  },
+  "GOOGLE": {
+    "GOOGLE_APPLICATION_CREDENTIALS": "./scc_key.json",
+    "GCLOUD_ORG": "",
+    "BUCKET_NAME": "",
+    "FIELDS": "RayID,ClientASN,ClientCountry,ClientDeviceType,ClientIP,ClientRequestHost,ClientRequestMethod,ClientRequestProtocol,ClientRequestReferer,ClientRequestURI,ClientRequestUserAgent,ClientSSLCipher,ClientSSLProtocol,ClientSrcPort,EdgeColoID,EdgePathingOp,EdgePathingSrc,EdgePathingStatus,EdgeRateLimitAction,EdgeRateLimitID,EdgeRequestHost,EdgeResponseStatus,EdgeServerIP,EdgeStartTimestamp,OriginIP,WAFAction,WAFFlags,WAFMatchedVar,WAFProfile,WAFRuleID,WAFRuleMessage"
+  }
+}
