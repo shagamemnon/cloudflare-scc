@@ -17,6 +17,7 @@
     "GOOGLE_APPLICATION_CREDENTIALS": "./scc_key.json",
     "GCLOUD_ORG": "",
     "BUCKET_NAME": "",
+    "GCLOUD_PROJECT_ID": "",
     "FIELDS": "RayID,ClientASN,ClientCountry,ClientDeviceType,ClientIP,ClientRequestHost,ClientRequestMethod,ClientRequestProtocol,ClientRequestReferer,ClientRequestURI,ClientRequestUserAgent,ClientSSLCipher,ClientSSLProtocol,ClientSrcPort,EdgeColoID,EdgePathingOp,EdgePathingSrc,EdgePathingStatus,EdgeRateLimitAction,EdgeRateLimitID,EdgeRequestHost,EdgeResponseStatus,EdgeServerIP,EdgeStartTimestamp,OriginIP,WAFAction,WAFFlags,WAFMatchedVar,WAFProfile,WAFRuleID,WAFRuleMessage"
   }
 }
