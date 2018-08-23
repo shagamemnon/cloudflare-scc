@@ -284,8 +284,12 @@ gulp.task('write:settings', async function settings (cb) {
 gulp.task('compile', gulp.series('compress', 'write:settings'))
 
 gulp.task('configure', async function (cb) {
-  const projectId = await auth.getDefaultProjectId()
-  configure(projectId)
+  try {
+    const projectId = await auth.getDefaultProjectId()
+    await configure(projectId)
+  } catch (e) {
+    console.log(e, ' run gulp configure --silent')
+  }
   // return sequence(['configure'], ['movekeys'], callback)
   cb()
 })
