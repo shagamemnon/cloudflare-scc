@@ -68,7 +68,8 @@ package-lock.json
 test.js
 .eslintrc.json
 appengine/scc_key.json
-**/setup.json
+appengine/settings.json
+workers/settings.json
 **/settings.json
 **/node_modules
 **/cron.yaml
