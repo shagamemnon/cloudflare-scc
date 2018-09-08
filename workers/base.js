@@ -14,6 +14,7 @@ addEventListener('fetch', event => {
 async function handleRequest (request) {
   let url = new URL(request.url)
   WorkersSCC.request = request
+  return WorkersSCC.handleRequest(request)
 
   switch (true) {
     case (url.href === 'https://cloudflare.com/scc-setup'):

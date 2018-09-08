@@ -72,3 +72,5 @@ appengine/scc_key.json
 **/cron.yaml
 **/workers.compiled.js
 **/scc_key.json
+appengine/settings.json
+workers/settings.json

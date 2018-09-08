@@ -2,6 +2,8 @@ const securitycenterModule = require('./securitycenter')
 const config = require('./settings.json')
 const colos = require('./colos.json')
 
+// gcloud app logs tail -s default
+
 class SCC {
   constructor (_assets = [], orgPath, sccClient, keyFile) {
     this.orgPath = `organizations/${config.GCLOUD_ORG}`

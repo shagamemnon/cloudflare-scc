@@ -69,7 +69,7 @@ async function poll () {
   }
 }
 
-const logger = cron.schedule('* * * * * *', () => {
+const logger = cron.schedule('* * * * *', () => {
   return poll()
 }, false)
 
