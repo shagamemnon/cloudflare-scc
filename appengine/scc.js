@@ -2,8 +2,6 @@ const securitycenterModule = require('./securitycenter')
 const config = require('./settings.json')
 const colos = require('./colos.json')
 
-const { db } = require('./utilities')
-
 class SCC {
   constructor (_assets = [], orgPath, sccClient, keyFile) {
     this.orgPath = `organizations/${config.GCLOUD_ORG}`

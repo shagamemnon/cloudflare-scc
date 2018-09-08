@@ -8,19 +8,18 @@ const app = express()
 const port = process.env.PORT || 8443
 const once = require('once')
 /*  https://github.com/openpgpjs/openpgpjs */
-const openpgp = require('openpgp')
-
 const config = require('./settings.json')
-const { db } = require('./utilities')
+const { DB } = require('./utilities')
 const { Finding } = require('./scc')
 // var parse = require('parse-header-stream')
 
 async function poll () {
   try {
     config.ZONE_NAMES.map(async zone => {
-      const response = await request.stream(`https://${config.UNIQUE_LOGS_ENDPOINT}/${zone}?token=${db.token()}&fields=${config.FIELDS}`, {
+      console.log(`https://${config.UNIQUE_LOGS_ENDPOINT}/${zone}?token=${DB.token()}&fields=${config.FIELDS}`)
+      const response = await request.stream(`https://${config.UNIQUE_LOGS_ENDPOINT}/${zone}?token=${DB.token()}&fields=${config.FIELDS}`, {
         retry: {
-          retries: 0,
+          retries: 1,
           maxRetryAfter: 250
         },
         headers: {
@@ -70,41 +69,7 @@ async function poll () {
   }
 }
 
-/*
- * Check database for existing PGP public/private key pair. If no pair is found, generate a new one
- * Once PGP public key is available, return it to the client
-*/
-app.get('/', async (req, res) => {
-  const response = message => res.status(200).json({ 'publicKey': message })
-  const db = new DB()
-  return db.exists('PGP_Public').then(entry => {
-    // If the "PGP_Public" query is found in the db
-    // return the public key
-    if (entry) return response(entry.public)
-  })
-})
-
-app.get('/new-key', async (req, res) => {
-  let opts = {
-    userIds: [{ email: 'customer@cloudflare.com' }],
-    curve: 'ed25519'
-  }
-
-  openpgp.generateKey(opts).then(keyPair => {
-    return db.save('PGP_Public', {
-      public: keyPair.publicKeyArmored,
-      private: keyPair.privateKeyArmored,
-      revocationSignature: keyPair.revocationSignature
-    })
-    // console.log(keyPair)
-  })
-})
-
-app.post('/listen', (req, res) => {
-  console.log(req.body)
-})
-
-const logger = cron.schedule('* * * * *', () => {
+const logger = cron.schedule('* * * * * *', () => {
   return poll()
 }, false)
 
