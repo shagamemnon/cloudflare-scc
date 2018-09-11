@@ -8,10 +8,7 @@ addEventListener('fetch', event => {
 })
 
 async function handleRequest (request) {
-  if (request.headers.get('Host').match(SETTINGS.UNIQUE_LOGS_ENDPOINT)) {
-    return WorkersSCC.handleRequest(request)
-  }
-  return fetch(request)
+  return WorkersSCC.handleRequest(request)
 }
 
 /*

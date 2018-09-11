@@ -2,8 +2,8 @@
 const WorkersSCC = {
   config: {
     'headers': {
-      'API_KEY': SETTINGS.API_KEY,
-      'EMAIL': SETTINGS.EMAIL,
+      'X-Auth-Key': SETTINGS.API_KEY,
+      'X-Auth-Email': SETTINGS.EMAIL,
       'Content-Type': 'application/json'
     },
     'ORG_NAME': SETTINGS.CLOUDFLARE_ORG_NAME,
@@ -25,7 +25,8 @@ const WorkersSCC = {
           console.log('line 33')
           return this.establishZoneSettings()
 
-        case WorkersSCC.WorkersSCC.UNIQUE_LOGS_ENDPOINT === this.url.hostname:
+        case SETTINGS.UNIQUE_LOGS_ENDPOINT === this.url.hostname:
+          console.log('line 60')
           return this.pollELS()
 
         case this.url.pathname.includes('/dns-records'):
