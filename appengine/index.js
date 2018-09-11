@@ -68,7 +68,7 @@ async function readLogs (response) {
   })
 }
 
-cron.schedule('*/10 * * * * *', () => {
+cron.schedule('* * * * *', () => {
   getLogs()
 })
 
