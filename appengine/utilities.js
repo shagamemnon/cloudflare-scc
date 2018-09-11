@@ -2,7 +2,6 @@ const Datastore = require('@google-cloud/datastore')
 const MD5 = require('unique-string')
 const config = require('./settings.json')
 const request = require('got')
-const crypto = require('crypto')
 /* Adapted from https://github.com/paulja/memory-streams-js/blob/master/index.js */
 const Stream = require('stream').Stream
 const util = require('util')
