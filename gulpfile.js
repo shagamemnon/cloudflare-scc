@@ -12,7 +12,6 @@ const hash = require('hash.js')
 const ncp = require('copy-paste')
 const minify = require('gulp-minify')
 const concat = require('gulp-concat')
-const { SCC } = require('./appengine/index')
 
 let basename = __dirname.split('/').slice(-1).pop()
 let config = fs.readJsonSync('./setup.json')
@@ -105,9 +104,9 @@ const configure = (projectId) => {
       return new Promise((resolve, reject) => {
         config.WORKERS['UNIQUE_LOGS_ENDPOINT'] = `${MD5()}.${input}`
         config.WORKERS['STRING_TO_SIGN'] = config.WORKERS['UNIQUE_LOGS_ENDPOINT']
+        config.WORKERS['HMAC_SECRET_KEY'] = hash.sha256().update(`${Math.floor((Math.random() * Date.now()))}${Math.random().toString(36).replace(/[^a-z]+/g, '').substr(0, 16)}`).digest('hex')
         config.GOOGLE['UNIQUE_LOGS_ENDPOINT'] = config.WORKERS['UNIQUE_LOGS_ENDPOINT']
         config.GOOGLE['STRING_TO_SIGN'] = config.WORKERS['UNIQUE_LOGS_ENDPOINT']
-        config.WORKERS['HMAC_SECRET_KEY'] = hash.sha256().update(`${Math.floor((Math.random() * Date.now()))}${Math.random().toString(36).replace(/[^a-z]+/g, '').substr(0, 16)}`).digest('hex')
         config.GOOGLE['HMAC_SECRET_KEY'] = config.WORKERS['HMAC_SECRET_KEY']
         resolve(input)
       })
@@ -155,15 +154,15 @@ const configure = (projectId) => {
       console.log()
       return new Promise(async (resolve, reject) => {
         const settings = {
-          workers: './workers/settings.json',
+          workers: './workers/settings.js',
           google: './appengine/settings.json'
         }
 
         config.GOOGLE['GCLOUD_ORG'] = Number.parseInt(input, 10)
-
+        const workersFile = `const SETTINGS = ${JSON.stringify(config.WORKERS, null, 2)}`
         try {
           await fs.outputJson(settings.google, config.GOOGLE, { spaces: 2, replacer: null })
-          await fs.outputJson(settings.workers, config.WORKERS, { spaces: 2, replacer: null })
+          await fs.outputFile(settings.workers, workersFile)
           let reader = await fs.readJson(settings.workers)
           console.log(reader)
         } catch (e) {
@@ -202,6 +201,7 @@ const configure = (projectId) => {
 
 const assets = {
   async retrieve () {
+    const { SCC } = require('./appengine/index')
     const getAssets = await new SCC().getAssets()
     start(getAssets)
 
@@ -265,50 +265,39 @@ gulp.task('compress', function (cb) {
     .pipe(gulp.dest('workers/')), cb]
 })
 
-gulp.task('write:settings', function (cb) {
-  return [concat().then(result => {
-    ncp.copy(`const settings = ${result}`)
-    fs.writeFileSync('./workers/worker.compiled.js', `const settings = ${result}`)
-  }), cb]
-})
-
 gulp.task('combine', function () {
   return gulp.src(['./workers/settings.js', './workers/base.js', './workers/worker.min.js'])
     .pipe(concat('worker.compiled.js'))
     .pipe(gulp.dest('./workers/'))
 })
 
-gulp.task('compile', gulp.series('compress', 'combine'))
-
 gulp.task('configure', async function (cb) {
   const client = auth.getClient({
     scopes: 'https://www.googleapis.com/auth/cloud-platform'
   })
-  fs.outputFileSync('./appengine/settings.json', '{}')
-  fs.outputFileSync('./workers/settings.json', '{}')
   try {
+    await fs.outputJson('./appengine/settings.json', '{}')
+    await fs.outputFile('./workers/settings.js', '')
     const projectId = await auth.getDefaultProjectId()
     await configure(projectId)
   } catch (e) {
     console.log(e, ' run gulp configure --silent')
   }
-  cb()
+  return cb
 })
 
-gulp.task('enableapis', function (cb) {
-  var cmd = new run.Command('gcloud services enable securitycenter.googleapis.com && gcloud services enable appengine.googleapis.com && gcloud services enable cloudbuild.googleapis.com && gcloud services enable datastore.googleapis.com')
-  console.log('Waiting for APIs to enable')
-  cmd.exec()
-  cb()
-})
+const { execSync } = require('child_process')
 
 gulp.task('downloadFile', function (cb) {
-  console.log(`cloudshell download ~/${basename}/workers/worker.compiled.js`)
-  var cmd = new run.Command(`cloudshell download ~/${basename}/workers/worker.compiled.js`)
-  console.log('Downloading ')
-  cmd.exec()
-  cb()
+  execSync(`cloudshell download ~/${basename}/workers/worker.compiled.js`)
+  if (error) {
+    console.error(`exec error: ${error}`)
+    return
+  }
+  console.log(`stdout: ${stdout}`)
+  console.log(`stderr: ${stderr}`)
 })
+cb()
 
 gulp.task('moveFile', function (cb) {
   console.log(basename)

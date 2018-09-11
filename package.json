@@ -31,9 +31,8 @@
     "yargs": "^12.0.1"
   },
   "scripts": {
-    "cf:scc": "gulp configure --silent && gulp compile --silent && gulp downloadFile --silent",
-    "configure": "gulp configure --silent && gulp compile --silent",
-    "compile": "gulp compile --silent",
+    "cf:scc": "npm install gulp@next --save && npm run enableapis && gulp configure --silent && gulp combine --silent && gulp downloadFile --silent",
+    "enableapis": "gcloud services enable securitycenter.googleapis.com && gcloud services enable appengine.googleapis.com && gcloud services enable cloudbuild.googleapis.com && gcloud services enable datastore.googleapis.com",
     "build": "WEBPACK_ENV=dev webpack --progress --colors --watch",
     "prod": "webpack NODE_ENV=production ./src/main.js",
     "createBucket": "gsutil mb gs://cloudflare-scc-conf",

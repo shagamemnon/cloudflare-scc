@@ -1,12 +1,8 @@
 {
   "WORKERS": {
-    "headers": {
-      "X-Auth-Key": "",
-      "X-Auth-Email": "",
-      "Content-Type": "application/json"
-    },
-    "ORG_NAME": "",
-    "SETUP_ENDPOINT": "https://cloudflare.com/scc-setup",
+    "API_KEY": "",
+    "EMAIL": "",
+    "CLOUDFLARE_ORG_NAME": "",
     "WORKERS_MULTISCRIPT": false,
     "SETUP": true,
     "HMAC_SECRET_KEY": "",
