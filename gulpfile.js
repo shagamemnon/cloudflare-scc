@@ -297,16 +297,12 @@ gulp.task('downloadFile', function (cb) {
   console.log(`stdout: ${stdout}`)
   console.log(`stderr: ${stderr}`)
 })
-cb()
 
 gulp.task('moveFile', function (cb) {
   console.log(basename)
   var cmd = new run.Command(`mv ~/scc*.json ~/${basename}/appengine/scc_key.json && cd ~/${basename}/appengine`)
   cmd.exec()
   cb()
-})
-
-gulp.task('cli', function (cb) {
 })
 
 gulp.task('cf:scc:assets', function (cb) {
