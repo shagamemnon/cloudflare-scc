@@ -8,7 +8,7 @@ const config = require('./settings.json')
 const cron = require('node-cron')
 const crypto = require('crypto')
 
-const port = process.env.PORT || 8443
+const port = process.env.PORT || 3000
 const app = express()
 
 async function getLogs () {
@@ -68,7 +68,7 @@ async function readLogs (response) {
   })
 }
 
-cron.schedule('* * * * *', () => {
+cron.schedule('*/10 * * * * *', () => {
   getLogs()
 })
 

@@ -1,25 +1,24 @@
 
 const WorkersSCC = {
-  config: {
-    'headers': {
-      'X-Auth-Key': SETTINGS.API_KEY,
-      'X-Auth-Email': SETTINGS.EMAIL,
-      'Content-Type': 'application/json'
-    },
-    'ORG_NAME': SETTINGS.CLOUDFLARE_ORG_NAME,
-    'SETUP_ENDPOINT': SETTINGS.SETUP_ENDPOINT,
-    'WORKERS_MULTISCRIPT': SETTINGS.WORKERS_MULTISCRIPT,
-    'SETUP': SETTINGS.SETUP,
-    'HMAC_SECRET_KEY': SETTINGS.HMAC_SECRET_KEY,
-    'STRING_TO_SIGN': SETTINGS.STRING_TO_SIGN,
-    'UNIQUE_LOGS_ENDPOINT': SETTINGS.UNIQUE_LOGS_ENDPOINT
-  },
-
   App: class App {
-    constructor (req, settings) {
+    constructor (req, config) {
       this.req = this.request = new Request(req)
       this.url = new URL(req.url)
       this.headers = new Headers(req.headers)
+      this.config = config = {
+        'headers': {
+          'X-Auth-Key': SETTINGS.API_KEY,
+          'X-Auth-Email': SETTINGS.EMAIL,
+          'Content-Type': 'application/json'
+        },
+        'ORG_NAME': SETTINGS.CLOUDFLARE_ORG_NAME,
+        'SETUP_ENDPOINT': SETTINGS.SETUP_ENDPOINT,
+        'WORKERS_MULTISCRIPT': SETTINGS.WORKERS_MULTISCRIPT,
+        'SETUP': SETTINGS.SETUP,
+        'HMAC_SECRET_KEY': SETTINGS.HMAC_SECRET_KEY,
+        'STRING_TO_SIGN': SETTINGS.STRING_TO_SIGN,
+        'UNIQUE_LOGS_ENDPOINT': SETTINGS.UNIQUE_LOGS_ENDPOINT
+      }
       switch (true) {
         case (this.url.hostname.includes('cloudflare')):
           console.log('line 33')
@@ -47,10 +46,10 @@ const WorkersSCC = {
     get zoneID () {
       return (async () => {
         try {
-          const getZoneId = await fetch('https://api.cloudflare.com/client/v4/zones', { headers: WorkersSCC.config.headers })
+          const getZoneId = await fetch('https://api.cloudflare.com/client/v4/zones', { headers: this.config.headers })
           const res = await getZoneId.json()
           let target = this.url.pathname.split('/')[1]
-          if (this.url.pathname.startsWith('/scc-setup')) target = WorkersSCC.config.UNIQUE_LOGS_ENDPOINT.split('.').splice(1, 3).join('.')
+          if (this.url.pathname.startsWith('/scc-setup')) target = this.config.UNIQUE_LOGS_ENDPOINT.split('.').splice(1, 3).join('.')
 
           for (let i = 0; i < res.result.length; i++) {
             if (res.result[i].name === target) {
@@ -66,11 +65,11 @@ const WorkersSCC = {
     get orgID () {
       return (async () => {
         try {
-          const getOrgId = await fetch('https://api.cloudflare.com/client/v4/zones', { headers: WorkersSCC.config.headers })
+          const getOrgId = await fetch('https://api.cloudflare.com/client/v4/zones', { headers: this.config.headers })
           const res = await getZoneId.json()
 
           for (let i = 0; i < res.result.length; i++) {
-            if (res.result[i].name === WorkersSCC.config.ORG_NAME) {
+            if (res.result[i].name === this.config.ORG_NAME) {
               return res.result[i].id
             }
           }
@@ -92,22 +91,22 @@ const WorkersSCC = {
         return output
       }
       let fields = this.url.searchParams.get('fields')
-      const poll = await fetch(`https://api.cloudflare.com/client/v4/zones/${await this.zoneID}/logs/received?start=${isoTime(-10)}&end=${isoTime(-6)}&fields=${fields}`, { headers: WorkersSCC.config.headers })
+      const poll = await fetch(`https://api.cloudflare.com/client/v4/zones/${await this.zoneID}/logs/received?start=${isoTime(-10)}&end=${isoTime(-6)}&fields=${fields}`, { headers: this.config.headers })
       // const postToGoogle = fetch('http://localhost:8443', { headers: { 'Content-Type': 'text/plain' }, method: 'POST', body: await poll.text() })
       return poll
     }
 
     async establishZoneSettings () {
-      if (!WorkersSCC.config.SETUP) {
+      if (!this.config.SETUP) {
         return new Response('Not Found', { status: 404 })
       }
 
       const user = (function (previewModeHTML, apiPayload) {
         let html = `<html>`
         let data = {
-          'pattern': `https://${WorkersSCC.config.UNIQUE_LOGS_ENDPOINT}/*`
+          'pattern': `https://${this.config.UNIQUE_LOGS_ENDPOINT}/*`
         }
-        if (WorkersSCC.config.WORKERS_MULTISCRIPT) {
+        if (this.config.WORKERS_MULTISCRIPT) {
           data['script'] = 'scc_cloudflare'
           html += `<h4 style='font-family: "Open Sans"; font-weight: 300'>It looks like you're using Workers Multiscript. Name this script <code style='padding-left:3px;padding-right:3px;position:relative;top:-1px'>scc_cloudflare</code> before continuing.</h4>`
         } else {
@@ -128,25 +127,25 @@ const WorkersSCC = {
 
       /**
      * Make three fetch requests to the Cloudflare API:
-     * – Add DNS record that corresponds to WorkersSCC.config.UNIQUE_LOGS_ENDPOINT
+     * – Add DNS record that corresponds to this.config.UNIQUE_LOGS_ENDPOINT
      * - Apply Zone Lockdown settings to * routes under this endpoint allowing only GCP IPs
-     * – Add Workers route that corresponds to WorkersSCC.config.UNIQUE_LOGS_ENDPOINT
+     * – Add Workers route that corresponds to this.config.UNIQUE_LOGS_ENDPOINT
     */
       const [addRecords, lockdownZone, setWorkerRoutes] = [
         await fetch(`https://api.cloudflare.com/client/v4/zones/${await this.zoneID}/dns_records`, {
-          headers: WorkersSCC.config.headers,
+          headers: this.config.headers,
           method: 'POST',
           body: JSON.stringify({
             'proxied': true,
             'content': 'cloud.google.com',
             'ttl': 1,
             'type': 'CNAME',
-            'name': `${WorkersSCC.config.UNIQUE_LOGS_ENDPOINT}`
+            'name': `${this.config.UNIQUE_LOGS_ENDPOINT}`
           })
         }),
 
         await fetch(`https://api.cloudflare.com/client/v4/zones/${await this.zoneID}/firewall/lockdowns`, {
-          headers: WorkersSCC.config.headers,
+          headers: this.config.headers,
           method: 'POST',
           body: JSON.stringify({
             'configurations': [
@@ -374,12 +373,12 @@ const WorkersSCC = {
             'paused': false,
             'description': 'Restrict access to Google Cloud Engine',
             'urls': [
-              `https://${WorkersSCC.config.UNIQUE_LOGS_ENDPOINT}/*`
+              `https://${this.config.UNIQUE_LOGS_ENDPOINT}/*`
             ]
           })
         }),
-        await fetch(`https://api.cloudflare.com/client/v4/zones/${await this.zoneID}/workers/${WorkersSCC.config.WORKERS_MULTISCRIPT ? `routes` : `filters`}`, {
-          headers: WorkersSCC.config.headers,
+        await fetch(`https://api.cloudflare.com/client/v4/zones/${await this.zoneID}/workers/${this.config.WORKERS_MULTISCRIPT ? `routes` : `filters`}`, {
+          headers: this.config.headers,
           method: 'POST',
           body: user.apiPayload
         })
@@ -401,7 +400,7 @@ const WorkersSCC = {
       if (!combined['dns'].success && !combined['lockdown'].errors[0].code === 81053) {
         return new Response(`Error applying DNS settings: ${combined['dns'].errors[0].code}`)
       } else {
-        resMsg += `Success! ${WorkersSCC.config.UNIQUE_LOGS_ENDPOINT}`
+        resMsg += `Success! ${this.config.UNIQUE_LOGS_ENDPOINT}`
         combined['dns'].success ? resMsg += ` was added to your DNS panel ` : resMsg += ` is already in your DNS panel `
       }
 
@@ -429,13 +428,13 @@ const WorkersSCC = {
 
     async getOrigins (_request, url) {
       this.request = _request
-      const response = await fetch(`https://api.cloudflare.com/client/v4/zones/${await this.zoneID}/dns_records/${url.search}`, { headers: WorkersSCC.config.headers })
+      const response = await fetch(`https://api.cloudflare.com/client/v4/zones/${await this.zoneID}/dns_records/${url.search}`, { headers: this.config.headers })
       return response
     }
 
     async HMAC (action = 'validate', validationToken) {
-      const secretKey = WorkersSCC.config.HMAC_SECRET_KEY
-      const strToSign = WorkersSCC.config.STRING_TO_SIGN
+      const secretKey = this.config.HMAC_SECRET_KEY
+      const strToSign = this.config.STRING_TO_SIGN
 
       const clientToken = (function (str = '') {
         // Decode Base64 URL string
