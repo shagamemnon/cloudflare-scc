@@ -159,7 +159,7 @@ const configure = (projectId) => {
         }
 
         config.GOOGLE['GCLOUD_ORG'] = Number.parseInt(input, 10)
-        const workersFile = `const SETTINGS = ${JSON.stringify(config.WORKERS, null, 2)}`
+        const workersFile = `const CONFIG = ${JSON.stringify(config.WORKERS, null, 2)}`
         try {
           await fs.outputJson(settings.google, config.GOOGLE, { spaces: 2, replacer: null })
           await fs.outputFile(settings.workers, workersFile)
