@@ -70,5 +70,4 @@ test.js
 appengine/scc_key.json
 **/node_modules
 **/cron.yaml
-**/workers.compiled.js
-**/scc_key.json
+workers/workers.compiled.js

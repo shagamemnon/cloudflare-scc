@@ -9,19 +9,18 @@
     "got": "^8.3.2",
     "moment": "^2.22.2",
     "ndjson": "^1.5.0",
-    "openpgp": "^3.1.1",
     "unique-string": "^1.0.0"
   },
   "devDependencies": {
     "babel-plugin-add-module-exports": "^0.2.1",
     "chalk": "^2.4.1",
-    "commander": "^2.17.1",
     "concat": "^1.0.3",
     "copy-paste": "^1.3.0",
     "fs-extra": "^7.0.0",
     "fuzzy": "^0.1.3",
     "gulp": "^4.0.0",
     "gulp-cli": "^2.0.1",
+    "gulp-concat": "^2.6.1",
     "gulp-minify": "^3.1.0",
     "gulp-run": "^1.7.1",
     "hash.js": "^1.1.5",
@@ -35,16 +34,13 @@
     "yargs": "^12.0.1"
   },
   "scripts": {
-    "cf:scc": "npm run enableapis && gulp configure --silent && gulp compile --silent && gulp downloadFile --silent",
-    "dev-one": "gulp configure --silent && gulp compile --silent",
+    "cf:scc": "gulp configure --silent && gulp compile --silent && gulp downloadFile --silent",
+    "configure": "gulp configure --silent && gulp compile --silent",
     "compile": "gulp compile --silent",
     "build": "WEBPACK_ENV=dev webpack --progress --colors --watch",
     "prod": "webpack NODE_ENV=production ./src/main.js",
     "createBucket": "gsutil mb gs://cloudflare-scc-conf",
-    "cloudflare:scc": "gulp cloudflare:scc --silent",
-    "enableapis": "gcloud services enable securitycenter.googleapis.com && gcloud services enable appengine.googleapis.com && gcloud services enable cloudbuild.googleapis.com && gcloud services enable datastore.googleapis.com",
     "start": "node cli.js",
-    "deploy": "gulp moveFile && cd appengine && gcloud app deploy",
-    "cli": "gulp cli"
+    "deploy": "gulp moveFile && cd appengine && gcloud app deploy"
   }
 }

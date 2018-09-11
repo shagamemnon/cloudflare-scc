@@ -11,16 +11,11 @@ const MD5 = require('unique-string')
 const hash = require('hash.js')
 const ncp = require('copy-paste')
 const minify = require('gulp-minify')
-const concat = require('concat')
+const concat = require('gulp-concat')
+const { SCC } = require('./appengine/index')
 
-const { SCC } = require('./appengine/scc')
-let config = fs.readJsonSync('./setup.json')
 let basename = __dirname.split('/').slice(-1).pop()
-console.log(basename)
-
-const client = auth.getClient({
-  scopes: 'https://www.googleapis.com/auth/cloud-platform'
-})
+let config = fs.readJsonSync('./setup.json')
 
 /* Set configuration data to be added to Worker template */
 const configure = (projectId) => {
@@ -257,45 +252,51 @@ const assets = {
   }
 }
 
-gulp.task('compress', async function (cb) {
+gulp.task('compress', function (cb) {
   return [gulp.src('workers/worker.js')
     .pipe(minify({
       ext: {
         src: '',
         min: '.min.js'
       },
-      ignoreFiles: ['*.min.js', 'base.js'],
+      ignoreFiles: ['*.min.js'],
       noSource: true
     }))
     .pipe(gulp.dest('workers/')), cb]
 })
 
-gulp.task('write:settings', async function settings (cb) {
-  try {
-    concat(['./workers/settings.json', './workers/base.js', './workers/worker.min.js']).then(async result => {
-      ncp.copy(`const settings = ${result}`)
-      fs.writeFileSync('./workers/worker.compiled.js', `const settings = ${result}`)
-    })
-  } catch (e) {
-    console.log(e)
-  }
+gulp.task('write:settings', function (cb) {
+  return [concat().then(result => {
+    ncp.copy(`const settings = ${result}`)
+    fs.writeFileSync('./workers/worker.compiled.js', `const settings = ${result}`)
+  }), cb]
 })
 
-gulp.task('compile', gulp.series('compress', 'write:settings'))
+gulp.task('combine', function () {
+  return gulp.src(['./workers/settings.js', './workers/base.js', './workers/worker.min.js'])
+    .pipe(concat('worker.compiled.js'))
+    .pipe(gulp.dest('./workers/'))
+})
+
+gulp.task('compile', gulp.series('compress', 'combine'))
 
 gulp.task('configure', async function (cb) {
+  const client = auth.getClient({
+    scopes: 'https://www.googleapis.com/auth/cloud-platform'
+  })
+  fs.outputFileSync('./appengine/settings.json', '{}')
+  fs.outputFileSync('./workers/settings.json', '{}')
   try {
     const projectId = await auth.getDefaultProjectId()
     await configure(projectId)
   } catch (e) {
     console.log(e, ' run gulp configure --silent')
   }
-  // return sequence(['configure'], ['movekeys'], callback)
   cb()
 })
 
 gulp.task('enableapis', function (cb) {
-  var cmd = new run.Command('npm run enableapis')
+  var cmd = new run.Command('gcloud services enable securitycenter.googleapis.com && gcloud services enable appengine.googleapis.com && gcloud services enable cloudbuild.googleapis.com && gcloud services enable datastore.googleapis.com')
   console.log('Waiting for APIs to enable')
   cmd.exec()
   cb()
@@ -313,271 +314,6 @@ gulp.task('moveFile', function (cb) {
   console.log(basename)
   var cmd = new run.Command(`mv ~/scc*.json ~/${basename}/appengine/scc_key.json && cd ~/${basename}/appengine`)
   cmd.exec()
-  cb()
-})
-
-const countries = [
-  'AF',
-  'AX',
-  'AL',
-  'DZ',
-  'AS',
-  'AD',
-  'AO',
-  'AI',
-  'AQ',
-  'AG',
-  'AR',
-  'AM',
-  'AW',
-  'AU',
-  'AT',
-  'AZ',
-  'BS',
-  'BH',
-  'BD',
-  'BB',
-  'BY',
-  'BE',
-  'BZ',
-  'BJ',
-  'BM',
-  'BT',
-  'BO',
-  'BA',
-  'BW',
-  'BV',
-  'BR',
-  'VG',
-  'IO',
-  'BN',
-  'BG',
-  'BF',
-  'BI',
-  'KH',
-  'CM',
-  'CA',
-  'CV',
-  'KY',
-  'CF',
-  'TD',
-  'CL',
-  'CN',
-  'HK',
-  'MO',
-  'CX',
-  'CC',
-  'CO',
-  'KM',
-  'CG',
-  'CD',
-  'CK',
-  'CR',
-  'CI',
-  'HR',
-  'CU',
-  'CY',
-  'CZ',
-  'DK',
-  'DJ',
-  'DM',
-  'DO',
-  'EC',
-  'EG',
-  'SV',
-  'GQ',
-  'ER',
-  'EE',
-  'ET',
-  'FK',
-  'FO',
-  'FJ',
-  'FI',
-  'FR',
-  'GF',
-  'PF',
-  'TF',
-  'GA',
-  'GM',
-  'GE',
-  'DE',
-  'GH',
-  'GI',
-  'GR',
-  'GL',
-  'GD',
-  'GP',
-  'GU',
-  'GT',
-  'GG',
-  'GN',
-  'GW',
-  'GY',
-  'HT',
-  'HM',
-  'VA',
-  'HN',
-  'HU',
-  'IS',
-  'IN',
-  'ID',
-  'IR',
-  'IQ',
-  'IE',
-  'IM',
-  'IL',
-  'IT',
-  'JM',
-  'JP',
-  'JE',
-  'JO',
-  'KZ',
-  'KE',
-  'KI',
-  'KP',
-  'KR',
-  'KW',
-  'KG',
-  'LA',
-  'LV',
-  'LB',
-  'LS',
-  'LR',
-  'LY',
-  'LI',
-  'LT',
-  'LU',
-  'MK',
-  'MG',
-  'MW',
-  'MY',
-  'MV',
-  'ML',
-  'MT',
-  'MH',
-  'MQ',
-  'MR',
-  'MU',
-  'YT',
-  'MX',
-  'FM',
-  'MD',
-  'MC',
-  'MN',
-  'ME',
-  'MS',
-  'MA',
-  'MZ',
-  'MM',
-  'NA',
-  'NR',
-  'NP',
-  'NL',
-  'AN',
-  'NC',
-  'NZ',
-  'NI',
-  'NE',
-  'NG',
-  'NU',
-  'NF',
-  'MP',
-  'NO',
-  'OM',
-  'PK',
-  'PW',
-  'PS',
-  'PA',
-  'PG',
-  'PY',
-  'PE',
-  'PH',
-  'PN',
-  'PL',
-  'PT',
-  'PR',
-  'QA',
-  'RE',
-  'RO',
-  'RU',
-  'RW',
-  'BL',
-  'SH',
-  'KN',
-  'LC',
-  'MF',
-  'PM',
-  'VC',
-  'WS',
-  'SM',
-  'ST',
-  'SA',
-  'SN',
-  'RS',
-  'SC',
-  'SL',
-  'SG',
-  'SK',
-  'SI',
-  'SB',
-  'SO',
-  'ZA',
-  'GS',
-  'SS',
-  'ES',
-  'LK',
-  'SD',
-  'SR',
-  'SJ',
-  'SZ',
-  'SE',
-  'CH',
-  'SY',
-  'TW',
-  'TJ',
-  'TZ',
-  'TH',
-  'TL',
-  'TG',
-  'TK',
-  'TO',
-  'TT',
-  'TN',
-  'TR',
-  'TM',
-  'TC',
-  'TV',
-  'UG',
-  'UA',
-  'AE',
-  'GB',
-  'US',
-  'UM',
-  'UY',
-  'UZ',
-  'VU',
-  'VE',
-  'VN',
-  'VI',
-  'WF',
-  'EH',
-  'YE',
-  'ZM',
-  'ZW'
-]
-
-const colos = require('./appengine/colos.json')
-gulp.task('addFolder', function (cb) {
-  console.log(basename)
-  countries.forEach(country => {
-    colos.map(colo => {
-      const file = ` ${country.toLowerCase()}/${colo.colo_code.toLowerCase()}/images.txt`
-      fs.outputFileSync(file, 'cat.jpg')
-    // var cmd = new run.Command(`gsutil cp /us -r gs://assets.cfiq.io/`)
-      // var cmd = new run.Command(`mkdir us/${colo.colo_code}`)
-      // cmd.exec()
-    })
-  })
   cb()
 })
 

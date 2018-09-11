@@ -1,10 +1,6 @@
 /*
- *
- *
- * Enter https://cloudflare.com/scc-setup in the Browser Preview
- *
- *
- *
+ * @IMPORTANT:
+ * Enter https://cloudflare.com/scc-setup in the Workers Preview ->
 */
 
 addEventListener('fetch', event => {
@@ -12,27 +8,10 @@ addEventListener('fetch', event => {
 })
 
 async function handleRequest (request) {
-  let url = new URL(request.url)
-  WorkersSCC.request = request
-  return WorkersSCC.handleRequest(request)
-
-  switch (true) {
-    case (url.href === 'https://cloudflare.com/scc-setup'):
-      return WorkersSCC.establishZoneSettings()
-
-    case (url.hostname === settings['UNIQUE_LOGS_ENDPOINT'] && WorkersSCC.HMAC('validate')):
-      return WorkersSCC.pollELS()
-
-    case url.href.includes('/dns-records'):
-      return WorkersSCC.getOrigins()
-
-    case (WorkersSCC.acceptsRoute(request.headers)):
-      return WorkersSCC.handleRequest()
-
-    default:
-      return WorkersSCC.rejectRequest()
+  if (request.headers.get('Host').match(SETTINGS.UNIQUE_LOGS_ENDPOINT)) {
+    return WorkersSCC.handleRequest(request)
   }
-  return WorkersSCC.rejectRequest()
+  return fetch(request)
 }
 
 /*
